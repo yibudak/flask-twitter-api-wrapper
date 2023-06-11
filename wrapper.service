@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve TwitterApiWrapper
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/flask-twitter-api-wrapper
+Environment="PATH=/var/www/flask-twitter-api-wrapper/venv/bin"
+ExecStart=/var/www/flask-twitter-api-wrapper/venv/bin/gunicorn --workers 1 --log-level warning --error-logfile stderr.log --capture-output --bind 0.0.0.0:7777 -m 007 wsgi:app
+
+[Install]
+WantedBy=multi-user.target
