@@ -1,14 +1,17 @@
 # Copyright 2023 Yiğit Budak (https://github.com/yibudak)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 from twitter.scraper import Scraper
-from twitter.util import init_session
+import logging
 
 
 class TwitterWrapper:
-    def __init__(self, conf):
+    def __init__(self, conf, test_tweet_id=896102939026148896):
         self.conf = conf
         self.blocked = False
+        self.test_tweet_id = test_tweet_id
         self.scraper = self.get_session()
+        if self.check_session():
+            logging.info("Session is live")
 
     def get_tweet(self, tweet_id):
         """
@@ -17,12 +20,14 @@ class TwitterWrapper:
         :return: dict
         """
         if not self.check_session():
-            self.renew_session()
+            if not self.renew_session():
+                raise Exception("Session is blocked")
         if self.scraper:
             try:
                 data = self.scraper.tweets_by_id([tweet_id])[0]["data"]
                 return data["tweetResult"]["result"]
             except Exception as e:
+                logging.error(f"Error while fetching tweet: {e}")
                 raise e
         else:
             raise Exception("Session is blocked")
@@ -34,9 +39,16 @@ class TwitterWrapper:
         """
         if not self.blocked:
             try:
-                session = init_session()
-                return Scraper(session=session, debug=4, save=True, pbar=False)
+                return Scraper(
+                    self.conf.twitter.email,
+                    self.conf.twitter.username,
+                    self.conf.twitter.password,
+                    debug=4,
+                    save=True,
+                    pbar=False,
+                )
             except Exception as e:
+                logging.error(f"Error while getting session: {e}")
                 self.blocked = True
         return None
 
@@ -46,7 +58,7 @@ class TwitterWrapper:
         :return: bool
         """
         self.scraper = self.get_session()
-        return True
+        return self.scraper is not None
 
     def check_session(self):
         """
@@ -55,8 +67,9 @@ class TwitterWrapper:
         """
         if not self.blocked and self.scraper:
             try:
-                self.scraper.tweet_stats([896102939026148896])  # @dramvemelodi
+                self.scraper.tweet_stats([self.test_tweet_id])
                 return True
             except Exception as e:
+                logging.error(f"Error while checking session: {e}")
                 self.scraper = None
         return False

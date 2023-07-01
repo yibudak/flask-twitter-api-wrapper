@@ -21,7 +21,6 @@ pathspec==0.11.1
 platformdirs==3.5.1
 sniffio==1.3.0
 tqdm==4.65.0
-twitter-api-client @ git+https://github.com/yibudak/twitter-api-client.git@068519344662594036b0c20fadaefaeb4bed9349
-uvloop==0.17.0
+git+https://github.com/yibudak/twitter-api-client.git@main#egg=twitter-api-client
 websockets==11.0.3
 Werkzeug==2.3.6
